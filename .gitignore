@@ -4,3 +4,9 @@ build/
 .idea/
 *.iml
 .DS_Store
+local.properties
+captures/
+.cxx/
+*.jks
+*.keystore
+*.log

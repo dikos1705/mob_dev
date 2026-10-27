@@ -1,17 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.2.20"
-    application
+    id("com.android.application") version "8.9.2" apply false
+    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+    id("org.jetbrains.kotlin.plugin.compose") version "2.2.20" apply false
 }
-
-repositories { mavenCentral() }
-
-dependencies {
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
-    testImplementation(kotlin("test-junit5"))
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.12.2")
-}
-
-kotlin { jvmToolchain(21) }
-application { mainClass.set("library.MainKt") }
-tasks.test { useJUnitPlatform() }
-tasks.named<JavaExec>("run") { standardInput = System.`in` }

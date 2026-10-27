@@ -1,0 +1,146 @@
+{
+  "verified_on": "2026-10-27",
+  "device": "Pixel 6 AVD / Android 15 / API 35 / x86_64",
+  "junit_suites": [
+    {
+      "suite": "com.dias.shelfwise.LibraryActionsTest",
+      "tests": 7,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        {
+          "class": "com.dias.shelfwise.LibraryActionsTest",
+          "name": "borrowing twice preserves the original due date",
+          "seconds": 0.017
+        },
+        {
+          "class": "com.dias.shelfwise.LibraryActionsTest",
+          "name": "return frees a slot and preserves saved flag progress and notes",
+          "seconds": 0.0
+        },
+        {
+          "class": "com.dias.shelfwise.LibraryActionsTest",
+          "name": "progress requires an active loan and stays within page bounds",
+          "seconds": 0.002
+        },
+        {
+          "class": "com.dias.shelfwise.LibraryActionsTest",
+          "name": "saved status toggles without creating a loan",
+          "seconds": 0.001
+        },
+        {
+          "class": "com.dias.shelfwise.LibraryActionsTest",
+          "name": "fourth loan is refused without changing the library",
+          "seconds": 0.005
+        },
+        {
+          "class": "com.dias.shelfwise.LibraryActionsTest",
+          "name": "notes are trimmed and bounded",
+          "seconds": 0.001
+        },
+        {
+          "class": "com.dias.shelfwise.LibraryActionsTest",
+          "name": "goals enforce both boundaries",
+          "seconds": 0.001
+        }
+      ]
+    },
+    {
+      "suite": "com.dias.shelfwise.LibraryViewModelTest",
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        {
+          "class": "com.dias.shelfwise.LibraryViewModelTest",
+          "name": "queued increments are serialized and survive a new viewmodel",
+          "seconds": 0.1
+        },
+        {
+          "class": "com.dias.shelfwise.LibraryViewModelTest",
+          "name": "invalid ids are ignored and an old notice cannot clear a newer one",
+          "seconds": 0.003
+        },
+        {
+          "class": "com.dias.shelfwise.LibraryViewModelTest",
+          "name": "failed persistence does not publish an unsaved change and permits retry",
+          "seconds": 0.003
+        }
+      ]
+    },
+    {
+      "suite": "com.dias.shelfwise.ShelfwiseAppTest",
+      "tests": 5,
+      "failures": 0,
+      "errors": 0,
+      "cases": [
+        {
+          "class": "com.dias.shelfwise.ShelfwiseAppTest",
+          "name": "a_borrowReadNoteGoalAndReturn",
+          "seconds": 7.027
+        },
+        {
+          "class": "com.dias.shelfwise.ShelfwiseAppTest",
+          "name": "b_recreationRestoresSearchRouteAndUnsavedDraft",
+          "seconds": 4.677
+        },
+        {
+          "class": "com.dias.shelfwise.ShelfwiseAppTest",
+          "name": "c_savedReadingStateSurvivesActivityRelaunch",
+          "seconds": 2.166
+        },
+        {
+          "class": "com.dias.shelfwise.ShelfwiseAppTest",
+          "name": "d_corruptPreferencesFallBackToAnEmptyLibrary",
+          "seconds": 0.807
+        },
+        {
+          "class": "com.dias.shelfwise.ShelfwiseAppTest",
+          "name": "z_captureReadmeScreenshots",
+          "seconds": 5.296
+        }
+      ]
+    }
+  ],
+  "lint": {
+    "errors": 0,
+    "warning_count": 11,
+    "warning_ids": {
+      "GradleDependency": 9,
+      "DataExtractionRules": 1,
+      "UseKtx": 1
+    }
+  },
+  "screenshots": [
+    {
+      "file": "docs/screenshots/01-discover.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "c6a3c653216a8bec99b18f7ba8cc6df00c7a51bc106fa37352c7ec8edefaf911"
+    },
+    {
+      "file": "docs/screenshots/02-book-details.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "c1e5c5e7045e0099d850c6fca464877fcbbd353354ea310f5c350fd1e5968697"
+    },
+    {
+      "file": "docs/screenshots/03-reading-notes.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "600656cdd93453b61fb71bf339300a705a26f83ef9424f5b1f7c046f48e835cc"
+    },
+    {
+      "file": "docs/screenshots/04-my-shelf.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "6d7090af9770634d896ac351504be72f740db9fa245e20c0549961278c0322da"
+    },
+    {
+      "file": "docs/screenshots/05-progress.png",
+      "width": 1080,
+      "height": 2400,
+      "sha256": "d84968aea6b024a1fc23ed97930128e3c9aebe1e0ba76536c6f51d380ec1e9b4"
+    }
+  ]
+}
