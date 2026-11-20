@@ -12,15 +12,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import com.dias.shelfwise.data.Catalog
+import com.dias.shelfwise.domain.Book
+import com.dias.shelfwise.domain.ReadingSession
 import com.dias.shelfwise.domain.UserLibrary
 
 @Composable
-fun ProgressScreen(library: UserLibrary, onGoal: (Int) -> Unit, onOpen: (String) -> Unit, onSave: (String) -> Unit) {
+fun ProgressScreen(books: List<Book>, library: UserLibrary, sessions: List<ReadingSession>, onGoal: (Int) -> Unit, onOpen: (String) -> Unit, onSave: (String) -> Unit, onJournal: () -> Unit) {
     var editing by rememberSaveable { mutableStateOf(false) }
     var goalDraft by rememberSaveable { mutableStateOf(library.goalPages.toString()) }
     val read = library.records.values.sumOf { it.pagesRead }
-    val completed = Catalog.books.count { library.record(it.id).pagesRead >= it.pages }
+    val completed = books.count { library.record(it.id).pagesRead >= it.pages }
     val notes = library.records.values.count { it.note.isNotBlank() }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Column { Eyebrow("Small steps add up"); Text("Look how far\nyou have read.", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.padding(top = 10.dp)) }
@@ -38,8 +39,17 @@ fun ProgressScreen(library: UserLibrary, onGoal: (Int) -> Unit, onOpen: (String)
             StatTile("Finished books", completed.toString(), Modifier.weight(1f))
             StatTile("Reading notes", notes.toString(), Modifier.weight(1f))
         }
+        val activeSessions = sessions.filter { it.undoneAt == null && !it.isAdjustment }
+        Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = RoundedCornerShape(20.dp)) {
+            Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Eyebrow("Your reading journal")
+                Text("${activeSessions.size} ${if (activeSessions.size == 1) "session" else "sessions"} · ${activeSessions.sumOf { it.minutes }} minutes", style = MaterialTheme.typography.titleLarge, modifier = Modifier.testTag("session-statistics"))
+                Text("${activeSessions.sumOf { it.pages }} pages from recorded sessions. Undone entries are excluded.", style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = onJournal, modifier = Modifier.testTag("open-journal")) { Text("View history & undo") }
+            }
+        }
         Text("Your pages, book by book", style = MaterialTheme.typography.titleLarge)
-        val started = Catalog.books.filter { library.record(it.id).pagesRead > 0 }
+        val started = books.filter { library.record(it.id).pagesRead > 0 }
         if (started.isEmpty()) Text("Borrow a book and record a few pages. Your progress will appear here.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         started.forEach { book -> BookCard(book, library.record(book.id), { onOpen(book.id) }, { onSave(book.id) }) }
         Text("Progress includes returned books. It stays with your reading journey.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

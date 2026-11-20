@@ -1,48 +1,25 @@
-# Verification — 27 October 2026
+# Task 3 verification — 2026-11-21
 
-## Environment
+Local environment: Windows 11, Temurin JDK 21.0.13.1, Gradle 8.14.3, Android SDK/build tools 35, Pixel 6 emulator on Android 15 / API 35 with WHPX acceleration.
 
-- Windows 11 host; JetBrains Runtime JDK 21.0.3.
-- Gradle Wrapper 8.14.3, Android Gradle Plugin 8.9.2, Kotlin 2.2.20.
-- Android SDK Platform 35 and Build Tools 35.0.0.
-- Pixel 6 AVD, Android 15 / API 35, Google APIs x86_64, WHPX acceleration.
-- Portrait display 1080 × 2400, 420 dpi; rotation also checked in the UI suite.
-
-## Results
-
-| Check | Result |
+| Check | Observed result |
 | --- | --- |
-| `:app:assembleDebug` | PASS; installable debug APK produced |
-| `:app:testDebugUnitTest` | PASS; 10 tests, 0 failures/errors |
-| `:app:lintDebug` | PASS; 0 errors, 11 warnings (details below) |
-| `:app:connectedDebugAndroidTest` | PASS; 5 tests, 0 failures/skips on the API 35 emulator |
-| Screenshot capture/export | PASS; 5 actual display captures, referenced in README |
+| Debug APK assembly | Passed |
+| JVM tests | **13 passed**, zero failures |
+| Room/repository instrumentation | **5 passed** |
+| Compose UI/screenshot instrumentation | **7 passed** |
+| Combined device run | **OK (12 tests)**, 35.842 seconds |
+| Android lint | Completed with no errors; warnings concern newer dependency versions and inherited backup configuration |
+| Additional-feature screenshots | Five actual 1080×2400 device captures in `docs/task3-screenshots/` |
 
-The ten JVM tests comprise seven domain tests and three ViewModel tests:
+The device tests use real Room databases, not mocked storage. They cover catalog CRUD and cascades, page/format edit conditions, session validation, transactional progress updates, ordered undo, repeated undo rejection, concurrent loan/progress actions, on-disk database close/reopen, one-time preference import and a collection that remains empty after every book is deleted.
 
-- Fourth loan refused; repeated borrowing does not reset the loan date.
-- Returning keeps notes, saved status and pages while freeing a loan slot.
-- Progress requires a loan and clamps to valid page bounds.
-- Notes are trimmed/bounded; bookmarks toggle independently of loans.
-- Goal boundaries are enforced.
-- Rapid queued increments survive delayed persistence without losing updates.
-- Save failure keeps the previous state and allows retry.
-- Unknown IDs are ignored; an old snackbar completion cannot clear a newer notice.
+UI tests exercise create/edit forms and errors, deletion cancel/confirm, borrowing/returning, manual page changes, notes, goals, search, saved books, session recording, disabled invalid actions, undo confirmation, cross-screen statistics, activity relaunch, form recreation and landscape rotation. The database reopen test proves persisted progress, notes, goals, sessions and deletions survive closing the storage connection and opening it again. Relaunch tests do not claim to simulate every Android process-kill scenario.
 
-The five instrumentation tests comprise four behavioral tests and one screenshot scenario:
+All five screenshot files are captured by `uiAutomation.takeScreenshot()` from the running app. The capture test prepares fictional history via the production repository, then records and undoes a new session through the visible UI. These images are not mockups or re-used midterm screenshots.
 
-- Borrow → record pages → save note → change goal → return; history stays intact.
-- Search input survives Activity recreation; an unsaved note survives recreation and actual landscape/portrait changes; active loan state stays intact.
-- A newly launched Activity restores the saved loan and pages from preferences.
-- Malformed JSON falls back to an empty library and the app remains usable.
-- Capture Discover, book details, notes/progress, My shelf and Progress with seeded fictional history.
+The initial UI run exposed snackbar-covered button clicks and an incorrect substring assertion. The final run passed after adding dismissible feedback and making test interactions wait for enabled controls. The Room tests passed throughout. Only final passing counts are reported above.
 
-`test-results.json` contains case names and counts extracted from the generated JUnit XML, plus screenshot dimensions and checksums. Full HTML reports are regenerated under `app/build/reports/` by the commands in README. Screenshots were inspected visually for readable content and layout.
+The instrumentation tests clear this app's database and legacy preferences on a test emulator; they should not run against a device containing user data to keep. They do not clear unrelated app data. Uninstall/clear-storage durability is not claimed.
 
-## Non-blocking diagnostics and scope
-
-Lint reports nine notices about newer dependency versions, one recommendation to specify Android 12+ data-extraction rules, and one recommendation to use the preferences KTX editing helper. Versions are pinned for this verified build. Preference writes deliberately use `commit()` on the IO dispatcher so a failed write can be detected before publishing state. The manifest disables Android cloud backup; OEM device-transfer behavior has not been tested.
-
-Gradle also reports deprecated APIs used by the Android build tooling. The wrapper is pinned to Gradle 8; upgrading to Gradle 9 is outside this build's verified configuration.
-
-Runtime validation was performed on the listed emulator. Minimum SDK 26 is declared and checked by lint, but an API 26 device and physical hardware were not tested. Network/real library integration is not implemented or claimed. This report does not substitute for the student's live defense.
+GitHub Actions is configured to repeat build, JVM tests, lint and device tests, then publish the debug APK, reports and screenshots. Read the branch's Actions run for its actual CI result.

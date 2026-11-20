@@ -1,39 +1,63 @@
-name: Android checks
+name: Task 3 Android checks
 
 on:
   push:
-    branches: [midterm-android]
+    branches: [task-3-mvvm-room]
   pull_request:
-    branches: [midterm-android]
+    branches: [task-3-mvvm-room]
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
       - uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.0'
           log-accepted-android-sdk-licenses: false
       - uses: gradle/actions/setup-gradle@v4
       - run: chmod +x gradlew
-      - run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug --stacktrace
+      - name: Build, unit tests and lint
+        run: ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug --console=plain
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Room and UI tests on Android 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          ram-size: 2048M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: |
+            ./gradlew :app:installDebug :app:installDebugAndroidTest --console=plain
+            adb shell am instrument -w -e class 'com.dias.shelfwise.RoomRepositoryTest,com.dias.shelfwise.ShelfwiseAppTest' com.dias.shelfwise.test/androidx.test.runner.AndroidJUnitRunner | tee instrumentation.txt
+            grep -q '^OK (' instrumentation.txt
+            adb pull /sdcard/Android/data/com.dias.shelfwise/files/task3-screenshots docs/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: android-reports
+          name: task3-verification
           path: |
             app/build/reports/tests/
             app/build/reports/lint-results-debug.*
+            instrumentation.txt
+            docs/task3-screenshots/
       - uses: actions/upload-artifact@v4
         with:
-          name: Shelfwise-debug-apk
+          name: Shelfwise-task3-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk

@@ -21,7 +21,11 @@ import kotlin.math.roundToInt
 
 @Composable
 fun BookDetailsScreen(book: Book, record: ReadingRecord, onBorrow: () -> Unit, onReturn: () -> Unit,
-    onSave: () -> Unit, onPages: (Int) -> Unit, onAddPages: () -> Unit, onSaveNote: (String) -> Unit) {
+    onSave: () -> Unit, onPages: (Int) -> Unit, onAddPages: () -> Unit, onSaveNote: (String) -> Unit,
+    onEdit: () -> Unit, onDelete: () -> Unit, onLogSession: (Int, Int, String) -> Unit,
+    onJournal: () -> Unit, saving: Boolean) {
+    var confirmingDelete by rememberSaveable(book.id) { mutableStateOf(false) }
+    var loggingSession by rememberSaveable(book.id) { mutableStateOf(false) }
     var note by rememberSaveable(book.id) { mutableStateOf(record.note) }
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -51,6 +55,17 @@ fun BookDetailsScreen(book: Book, record: ReadingRecord, onBorrow: () -> Unit, o
             Text("On your shelf · return by ${due.format(DateTimeFormatter.ofPattern("MMM d"))}",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
         }
+        OutlinedCard(Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Eyebrow("One session at a time")
+                Text("Make your pages count.", style = MaterialTheme.typography.titleLarge)
+                Text("Record pages, time and a thought. Review your history or undo the latest entry.", style = MaterialTheme.typography.bodySmall)
+                Button(onClick = { loggingSession = true }, enabled = !saving && record.borrowedAt != null && record.pagesRead < book.pages,
+                    modifier = Modifier.fillMaxWidth().testTag("log-session")) { Text("Record a reading session") }
+                if (record.borrowedAt == null) Text("Borrow this book to record a session.", style = MaterialTheme.typography.bodySmall)
+                TextButton(onClick = onJournal, modifier = Modifier.testTag("book-journal")) { Text("View this book's journal") }
+            }
+        }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Inside this book", style = MaterialTheme.typography.titleLarge)
             Text(book.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -77,6 +92,21 @@ fun BookDetailsScreen(book: Book, record: ReadingRecord, onBorrow: () -> Unit, o
                 supportingText = { Text("${note.length}/1000") })
             OutlinedButton(onClick = { onSaveNote(note); focus.clearFocus(); keyboard?.hide() }, modifier = Modifier.testTag("save-note")) { Text("Save note") }
         }
+        HorizontalDivider()
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            OutlinedButton(onClick = onEdit, enabled = !saving, modifier = Modifier.testTag("edit-book")) { Text("Edit book") }
+            TextButton(onClick = { confirmingDelete = true }, enabled = !saving,
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+                modifier = Modifier.testTag("delete-book")) { Text("Delete book") }
+        }
         Spacer(Modifier.height(12.dp))
     }
+    if (loggingSession) SessionEditor(book, record, saving,
+        onConfirm = { pages, minutes, sessionNote -> onLogSession(pages, minutes, sessionNote); loggingSession = false },
+        onDismiss = { loggingSession = false })
+    if (confirmingDelete) AlertDialog(onDismissRequest = { confirmingDelete = false },
+        title = { Text("Delete ${book.title}?") },
+        text = { Text("The book, its saved status, loan, notes, progress and journal entries will be removed from this device. This cannot be undone.") },
+        confirmButton = { TextButton(onClick = { confirmingDelete = false; onDelete() }, modifier = Modifier.testTag("confirm-delete")) { Text("Delete permanently") } },
+        dismissButton = { TextButton(onClick = { confirmingDelete = false }) { Text("Cancel") } })
 }

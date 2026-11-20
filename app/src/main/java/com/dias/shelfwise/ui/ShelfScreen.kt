@@ -11,13 +11,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.dias.shelfwise.data.Catalog
+import com.dias.shelfwise.domain.Book
 import com.dias.shelfwise.domain.UserLibrary
 
 @Composable
-fun ShelfScreen(library: UserLibrary, onOpen: (String) -> Unit, onSave: (String) -> Unit, onDiscover: () -> Unit) {
+fun ShelfScreen(catalog: List<Book>, library: UserLibrary, onOpen: (String) -> Unit, onSave: (String) -> Unit, onDiscover: () -> Unit) {
     var filter by rememberSaveable { mutableStateOf("Reading") }
-    val books = Catalog.books.filter { book ->
+    val books = catalog.filter { book ->
         val record = library.record(book.id)
         when (filter) {
             "Saved" -> record.saved

@@ -18,15 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.dias.shelfwise.data.Catalog
+import com.dias.shelfwise.domain.Book
 import com.dias.shelfwise.domain.UserLibrary
 
 @Composable
-fun DiscoverScreen(library: UserLibrary, onOpen: (String) -> Unit, onSave: (String) -> Unit) {
+fun DiscoverScreen(books: List<Book>, library: UserLibrary, onOpen: (String) -> Unit, onSave: (String) -> Unit, onCreate: () -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf("All") }
-    val filtered = remember(query, category) {
-        Catalog.books.filter { book ->
+    val filtered = remember(books, query, category) {
+        books.filter { book ->
             (category == "All" || book.category == category) &&
                 listOf(book.title, book.author, book.category).any { it.contains(query.trim(), ignoreCase = true) }
         }
@@ -36,8 +36,8 @@ fun DiscoverScreen(library: UserLibrary, onOpen: (String) -> Unit, onSave: (Stri
             Eyebrow("Your campus reading companion")
             Text("Make room for\na good book.", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.padding(top = 10.dp))
         }
-        if (query.isBlank() && category == "All") item(key = "featured") {
-            val book = Catalog.books.first()
+        if (books.isNotEmpty() && query.isBlank() && category == "All") item(key = "featured") {
+            val book = books.first()
             Row(Modifier.fillMaxWidth().testTag("featured-${book.id}").clip(RoundedCornerShape(20.dp))
                 .background(MaterialTheme.colorScheme.primaryContainer).clickable { onOpen(book.id) }.padding(20.dp),
                 verticalAlignment = Alignment.CenterVertically) {
@@ -62,7 +62,7 @@ fun DiscoverScreen(library: UserLibrary, onOpen: (String) -> Unit, onSave: (Stri
         }
         item(key = "categories") {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(Catalog.categories) { name ->
+                items((listOf("All") + books.map { it.category }).distinct(), key = { it }) { name ->
                     FilterChip(selected = category == name, onClick = { category = name }, label = { Text(name) })
                 }
             }
@@ -73,8 +73,12 @@ fun DiscoverScreen(library: UserLibrary, onOpen: (String) -> Unit, onSave: (Stri
                 Text("${filtered.size} books", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
+        item(key = "create-book") {
+            OutlinedButton(onClick = onCreate, modifier = Modifier.fillMaxWidth().testTag("create-book")) { Text("Add a book") }
+        }
         if (filtered.isEmpty()) item(key = "empty-results") {
-            EmptyState("No books found", "Try another title or a different subject.", "Clear filters", { query = ""; category = "All" })
+            if (books.isEmpty()) EmptyState("Your collection starts here", "Add a book to begin your reading journey.", "Add a book", onCreate)
+            else EmptyState("No books found", "Try another title or a different subject.", "Clear filters", { query = ""; category = "All" })
         }
         items(filtered, key = { it.id }) { book ->
             BookCard(book, library.record(book.id), { onOpen(book.id) }, { onSave(book.id) })
